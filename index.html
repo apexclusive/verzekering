@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verzekering Vergelijker — APEXclusive | Vergelijk autoverzekeringen snel en simpel</title>
+  <meta name="description" content="Vergelijk snel autoverzekeringen op premie, dekking en voorwaarden. Vind de beste optie zonder registratie.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="nl_NL">
+  <meta property="og:title" content="Verzekering Vergelijker — APEXclusive">
+  <meta property="og:description" content="Vergelijk snel autoverzekeringen op premie, dekking en voorwaarden.">
+  <meta property="og:url" content="https://verzekering.apexclusive.nl/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Verzekering Vergelijker — APEXclusive">
+  <meta name="twitter:description" content="Vergelijk autoverzekeringen snel op premie en dekking.">
+  <meta name="theme-color" content="#0d0d0d">
+  <link rel="canonical" href="https://verzekering.apexclusive.nl/">
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%230a0a0a"/><text x="32" y="46" font-family="Georgia,serif" font-size="42" fill="%23c6cbd1" text-anchor="middle">A</text></svg>'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Oswald:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#verzekering-vergelijker">Direct naar de verzekering vergelijker</a>
+  <div id="progress"></div>
+
+  <header>
+    <a href="https://apexclusive.nl" class="brand" target="_blank" rel="noreferrer">
+      <span class="brand-apex">APEX</span>
+      <span class="brand-sep" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="brand-excl">exclusive</span>
+    </a>
+    <a href="https://apexclusive.nl/#tools" class="back-btn" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Terug naar tools
+    </a>
+  </header>
+
+  <div class="page-hero" id="top">
+    <div class="page-hero-inner">
+      <h1>Verzekering Vergelijker<br><em>Vergelijk. Kies. Bespaar.</em></h1>
+      <div class="hero-meta">
+        <div class="hero-points" aria-label="Tool voordelen">
+          <span>Direct resultaat</span>
+          <span>Geen registratie</span>
+          <span>Beste dekking</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tri-div"></div>
+
+  <main class="wrap">
+    <div class="form-card rv" id="verzekering-vergelijker">
+      <div class="form-inner">
+
+        <p class="ey tri-in">
+          <span class="ey-tri" aria-hidden="true"><span></span><span></span><span></span></span>
+          Verzekeringprofiel
+        </p>
+
+        <!-- Stappen indicator -->
+        <div class="form-steps" aria-label="Formulier stappen">
+          <div class="form-step active" data-step="1">
+            <div class="form-step-num">1</div>
+            Auto
+          </div>
+          <div class="form-step" data-step="2">
+            <div class="form-step-num">2</div>
+            Financiering
+          </div>
+          <div class="form-step" data-step="3">
+            <div class="form-step-num">3</div>
+            Profiel
+          </div>
+          <div class="form-step" data-step="4">
+            <div class="form-step-num">4</div>
+            Voorkeur
+          </div>
+        </div>
+
+        <form class="valuation-form" id="loan-form" novalidate>
+          <div class="form-grid">
+            <div class="wizard-step" data-step="1">
+              <div class="form-section-title">Voertuig</div>
+              <p class="wizard-step-copy">Geef voertuiggegevens voor een nauwkeurige premie‑indicatie.</p>
+
+              <div class="field">
+                <label class="field-lbl" for="vehicle-make">Merk en model</label>
+                <input class="fi" id="vehicle-make" name="vehicleMake" type="text" value="Volkswagen Golf" required placeholder="Bijv. Volkswagen Golf">
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="vehicle-year">Bouwjaar</label>
+                <div class="fi-wrap">
+                  <input class="fi" id="vehicle-year" name="vehicleYear" type="number" min="1980" max="2026" value="2018" required placeholder="2018">
+                </div>
+                <p class="field-help">Oudere auto's beïnvloeden premie en dekking.</p>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="vehicle-value">Catalogus / marktwaarde</label>
+                <div class="fi-wrap">
+                  <span class="fi-prefix">€</span>
+                  <input class="fi" id="vehicle-value" name="vehicleValue" type="number" min="500" step="100" value="14500" required placeholder="14.500">
+                </div>
+                <p class="field-help">Gebruik actuele marktwaarde voor beste indicatie.</p>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="annual-km">Jaarlijkse kilometerstand</label>
+                <select class="fi" id="annual-km" name="annualKm">
+                  <option value="5000">Tot 5.000 km</option>
+                  <option value="10000" selected>5.000–10.000 km</option>
+                  <option value="15000">10.000–15.000 km</option>
+                  <option value="20000">15.000–20.000 km</option>
+                  <option value="30000">Meer dan 20.000 km</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="parking">Parkeersituatie</label>
+                <select class="fi" id="parking" name="parking">
+                  <option value="street" selected>Straat / openbaar</option>
+                  <option value="driveway">Oprit / privé terrein</option>
+                  <option value="garage">Gesloten garage</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-lbl" for="postcode">Postcode (4 cijfers)</label>
+                <input class="fi" id="postcode" name="postcode" type="text" pattern="[0-9]{4}" maxlength="4" placeholder="Bijv. 6211">
+                <p class="field-help">Postcode gebruiken voor indicatieve woonplaats‑risico (optioneel).</p>
+              </div>
+            </div>
+
+            <div class="wizard-step" data-step="2">
+              <div class="form-section-title">Dekking</div>
+              <p class="wizard-step-copy">Kies dekking en eigen risico voor uw voorkeur.</p>
+
+              <div class="field full">
+                <label class="field-lbl">Type dekking</label>
+                <div class="fi-group" id="coverage-group" role="radiogroup" aria-label="Type dekking">
+                  <label class="fi-radio active"><input type="radio" name="coverage" value="wa" checked><span class="fi-radio-dot"></span>WA (verplicht)</label>
+                  <label class="fi-radio"><input type="radio" name="coverage" value="wa_plus"><span class="fi-radio-dot"></span>WA + Beperkt casco</label>
+                  <label class="fi-radio"><input type="radio" name="coverage" value="allrisk"><span class="fi-radio-dot"></span>Allrisk / Volledig casco</label>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="deductible">Eigen risico</label>
+                <select class="fi" id="deductible" name="deductible">
+                  <option value="0">€ 0</option>
+                  <option value="250">€ 250</option>
+                  <option value="500" selected>€ 500</option>
+                  <option value="1000">€ 1.000</option>
+                </select>
+              </div>
+
+              <div class="field full">
+                <label class="field-lbl" for="extras">Optionele extra's</label>
+                <div class="fi-group">
+                  <label class="fi-toggle-wrap" id="roadside-toggle" for="roadside-input"> <span class="fi-toggle-lbl">Pechhulp</span> <span class="fi-toggle"><input type="checkbox" id="roadside-input" name="hasRoadside"><span class="fi-toggle-track"></span><span class="fi-toggle-thumb"></span></span></label>
+                  <label class="fi-toggle-wrap" id="legal-toggle" for="legal-input"> <span class="fi-toggle-lbl">Rechtsbijstand</span> <span class="fi-toggle"><input type="checkbox" id="legal-input" name="hasLegal"><span class="fi-toggle-track"></span><span class="fi-toggle-thumb"></span></span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="wizard-step" data-step="3">
+              <div class="form-section-title">Bestuurder</div>
+              <p class="wizard-step-copy">Vul bestuurdergegevens in voor risico‑inschatting.</p>
+
+              <div class="field">
+                <label class="field-lbl" for="driver-age">Leeftijd hoofdbestuurder</label>
+                <input class="fi" id="driver-age" name="driverAge" type="number" min="18" max="100" value="38" required>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="license-years">Rijervaring (jaren)</label>
+                <input class="fi" id="license-years" name="licenseYears" type="number" min="0" max="80" value="18" required>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="driver-profile">Bestuurder profiel</label>
+                <select class="fi" id="driver-profile" name="driverProfile">
+                  <option value="primary" selected>Hoofdbestuurder</option>
+                  <option value="young">Jonge bestuurder (onder 25)</option>
+                  <option value="occasional">Incidentele bestuurder</option>
+                </select>
+                <p class="field-help">Kies het profiel dat het beste bij de situatie past.</p>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="no-claim">No‑claim jaren</label>
+                <select class="fi" id="no-claim" name="noClaimYears">
+                  <option value="0">0 jaar</option>
+                  <option value="1">1 jaar</option>
+                  <option value="2">2 jaren</option>
+                  <option value="3">3 jaren</option>
+                  <option value="5" selected>5 jaren</option>
+                  <option value="10">10+ jaren</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field-lbl" for="drivers-count">Aantal bestuurders</label>
+                <select class="fi" id="drivers-count" name="driversCount">
+                  <option value="1" selected>1</option>
+                  <option value="2">2</option>
+                  <option value="3">3+</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="wizard-step" data-step="4">
+              <div class="form-section-title">Voorkeuren</div>
+              <p class="wizard-step-copy">Kies uw betaalvoorkeur en prioriteit bij vergelijking.</p>
+
+              <div class="field full">
+                <span class="field-lbl">Betaling</span>
+                <div class="fi-group" id="payment-freq-group" role="radiogroup" aria-label="Betaling">
+                  <label class="fi-radio active"><input type="radio" name="paymentFreq" value="yearly" checked><span class="fi-radio-dot"></span>Jaarlijks</label>
+                  <label class="fi-radio"><input type="radio" name="paymentFreq" value="monthly"><span class="fi-radio-dot"></span>Maandelijks</label>
+                </div>
+              </div>
+
+              <div class="field full">
+                <span class="field-lbl">Belangrijkste voorkeur</span>
+                <div class="fi-group" id="preference-group" role="radiogroup" aria-label="Voorkeur">
+                  <label class="fi-radio active"><input type="radio" name="preferredFeature" value="lowest-premium" checked><span class="fi-radio-dot"></span>Laagste premie</label>
+                  <label class="fi-radio"><input type="radio" name="preferredFeature" value="best-coverage"><span class="fi-radio-dot"></span>Beste dekking</label>
+                  <label class="fi-radio"><input type="radio" name="preferredFeature" value="lowest-excess"><span class="fi-radio-dot"></span>Laagste eigen risico</label>
+                </div>
+              </div>
+
+              <div class="trust-strip">
+                <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Geen registratie vereist</div>
+                <div class="trust-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Direct resultaat</div>
+                <div class="trust-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Indicatief en vrijblijvend</div>
+              </div>
+            </div>
+          </div><!-- /.form-grid -->
+
+          <!-- Inline summary -->
+          <div class="inline-summary" id="inline-summary">
+            <div class="inline-summary-item">
+                <span class="inline-summary-lbl">Geschatte marktwaarde</span>
+                <span class="inline-summary-val" id="summary-principal">€ 14.500</span>
+            </div>
+            <div class="inline-summary-item">
+                <span class="inline-summary-lbl">Dekking</span>
+                <span class="inline-summary-val" id="summary-duration-inline">WA</span>
+            </div>
+            <div class="inline-summary-item">
+                <span class="inline-summary-lbl">Eigen risico</span>
+                <span class="inline-summary-val" id="summary-down">€ 500</span>
+            </div>
+          </div>
+
+          <div id="rate-notice" class="field-help" hidden style="margin-top:.6rem;"></div>
+
+          <div class="rate-dashboard" id="rate-dashboard" hidden>
+            <div class="rate-dashboard-left">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span class="rate-dashboard-title">Live tarieven</span>
+            </div>
+            <div class="rate-dashboard-right">
+              <span class="rate-dashboard-date" id="rate-date">—</span>
+              <span class="rate-dashboard-source" id="rate-source">APEXclusive tarieven</span>
+            </div>
+          </div>
+
+          <div class="form-feedback" id="form-feedback" role="status" aria-live="polite" hidden></div>
+
+          <div class="wizard-actions">
+            <button type="button" class="wizard-btn wizard-btn-secondary" id="prev-step">Vorige</button>
+            <button type="button" class="wizard-btn wizard-btn-primary" id="next-step">
+              <span>Volgende</span>
+            </button>
+            <button type="submit" class="calc-btn" id="submit-btn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Vergelijk verzekeringen</span>
+            </button>
+          </div>
+
+          <div class="calc-btn-sub">Indicatief resultaat — geen verplichting</div>
+
+          <button type="button" class="reset-link" id="reset-button">Opnieuw beginnen</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="empty-state" id="empty-state">
+      <div class="empty-tri"><span></span><span></span><span></span></div>
+      <div class="empty-title">Vul de gegevens in om deals te vergelijken.</div>
+      <div class="empty-sub">Resultaten verschijnen hier na berekening</div>
+    </div>
+
+    <div class="result-wrap" id="result-wrap" hidden aria-live="polite">
+      <div class="betalen-wrap" id="uitkomst">
+        <div class="betalen-header">
+          <div class="betalen-icon">%</div>
+          <div class="betalen-content">
+            <div class="betalen-lbl">Laagste premie per maand</div>
+            <div class="betalen-val" id="best-monthly">€ 0 / maand</div>
+            <div class="betalen-sub" id="best-monthly-sub">Topdeal voor uw gekozen profiel</div>
+          </div>
+        </div>
+        <div class="betalen-kosten">
+          <div class="betalen-kost bpm-kost">
+            <div class="betalen-kost-lbl">Aanbevolen aanbieder</div>
+            <div class="betalen-kost-val" id="best-overall">—</div>
+            <div class="betalen-kost-sub" id="best-overall-sub">Balans tussen prijs en dekking</div>
+          </div>
+          <div class="betalen-kost">
+            <div class="betalen-kost-lbl">Laagste jaarlijkse premie</div>
+            <div class="betalen-kost-val" id="lowest-total">€ 0</div>
+            <div class="betalen-kost-sub" id="lowest-total-sub">Op basis van geselecteerde dekking en opties</div>
+          </div>
+          <div class="betalen-kost">
+            <div class="betalen-kost-lbl">Gemiddelde premie</div>
+            <div class="betalen-kost-val" id="avg-rate">—</div>
+            <div class="betalen-kost-sub">Indicatie van gemiddelde premie binnen selectie</div>
+          </div>
+          <div class="betalen-kost">
+            <div class="betalen-kost-lbl">Geschatte marktwaarde</div>
+            <div class="betalen-kost-val" id="loan-principal">€ 14.500</div>
+            <div class="betalen-kost-sub">Waarde gebaseerd op opgegeven voertuiggegevens</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-main">
+        <div class="result-top">
+          <div class="rn-card">
+            <div class="rn-lbl">Dekkingsniveau</div>
+            <div class="rn-val" id="summary-duration">WA / WA+ / Allrisk</div>
+            <div class="rn-sub">Geselecteerde dekking bepaalt veel van de premie</div>
+          </div>
+          <div class="rn-card">
+            <div class="rn-lbl">Premiecomponenten</div>
+            <div class="rn-val" id="summary-interest-type">Basis + toeslagen</div>
+            <div class="rn-sub">Inclusief extra's en risicofactoren</div>
+          </div>
+          <div class="rn-card">
+            <div class="rn-lbl">Voorkeur toegepast</div>
+            <div class="rn-val" id="summary-preference">Laagste premie</div>
+            <div class="rn-sub">Stuurt totaalscore en ranking</div>
+          </div>
+        </div>
+        <div class="result-footnote" id="result-footnote">Gebruik dit overzicht als eerste selectie voordat u definitief tekent.</div>
+      </div>
+
+      <div class="offers-section">
+        <div class="offers-head">
+          <div class="section-lbl">Vergelijking aanbieders</div>
+          <label class="sort-wrap" for="sort-offers">
+            Sorteer op
+            <select id="sort-offers" class="sort-select">
+              <option value="overall" selected>Beste totaalscore</option>
+              <option value="monthly">Laagste maandlast</option>
+              <option value="total">Laagste totale kosten</option>
+              <option value="apr">Laagste rente</option>
+              <option value="flex">Hoogste flexibiliteit</option>
+            </select>
+          </label>
+        </div>
+        <div class="offers-grid" id="offers-grid"></div>
+      </div>
+
+      <div class="insight-strip" id="insight-strip" aria-live="polite">
+        <div class="insight-item">
+          <span class="insight-lbl">Prijsverschil top 3</span>
+          <span class="insight-val" id="spread-value">€ 0</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-lbl">Aanbevolen focus</span>
+          <span class="insight-val" id="focus-value">Laagste maandlast</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-lbl">Onderhandelruimte</span>
+          <span class="insight-val" id="negotiation-value">Gemiddeld</span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="section-lbl">Toelichting berekening</div>
+        <div class="detail-grid">
+          <div>
+            <span class="di-lbl">Maandlast</span>
+            <span class="di-val">Indicatieve annuïteit op basis van rente, looptijd en financieringsbedrag.</span>
+          </div>
+          <div>
+            <span class="di-lbl">Totale kosten</span>
+            <span class="di-val">Totaalbedrag inclusief rentekosten en eenmalige afsluitkosten.</span>
+          </div>
+          <div>
+            <span class="di-lbl">Flexibiliteit</span>
+            <span class="di-val">Scoring op boetevrij extra aflossen, boete bij vervroegd aflossen en contractvrijheid.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">Indicatieve vergelijking op basis van ingevoerde gegevens en modelmatige tarieven. Werkelijke aanbiedingen kunnen afwijken door acceptatiecriteria, polisvoorwaarden of acties van de verzekeraar.</div>
+
+      <div class="other-tools">
+        <span class="other-tools-lbl">Meer instrumenten</span>
+        <div class="other-tools-links">
+          <a href="https://waarde.apexclusive.nl" class="tool-link-sm" target="_blank" rel="noreferrer">Auto Waarde Tool</a>
+          <a href="https://verzekering.apexclusive.nl" class="tool-link-sm" target="_blank" rel="noreferrer">Verzekering Vergelijker</a>
+        </div>
+      </div>
+
+      <div class="cta-wrap" id="contact">
+        <p class="ey c tri-in" style="margin-bottom:.85rem">
+          <span class="ey-tri" aria-hidden="true"><span></span><span></span><span></span></span>
+          Persoonlijke financieringshulp nodig?
+          <span class="ey-tri-r" aria-hidden="true"><span></span><span></span><span></span></span>
+        </p>
+        <h3>Wilt u de beste deal laten toetsen?<br><em>APEXclusive denkt met u mee.</em></h3>
+        <p>Gebruik deze vergelijker als shortlist en laat daarna een adviseur meekijken voor de scherpste voorwaarden en een veilige keuze.</p>
+        <div class="cta-btns">
+          <a class="btn" href="https://apexclusive.nl/#contact" target="_blank" rel="noreferrer"><span>Vrijblijvend gesprek</span></a>
+          <a class="btn gh" href="https://apexclusive.nl/#tools" target="_blank" rel="noreferrer"><span>Meer tools</span></a>
+        </div>
+      </div>
+
+      <section class="methodology" aria-label="Methodiek van de vergelijking">
+        <div class="section-lbl">Methodiek</div>
+        <p>De ranking combineert drie factoren: totale kosten, maandlast en flexibiliteit. Uw voorkeur bepaalt welke factor zwaarder meetelt in de totaalscore.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="ft-tri"><span></span><span></span><span></span></div>
+    <div class="ft-copy">
+      <a href="https://apexclusive.nl" target="_blank" rel="noreferrer">
+        © <span id="yr">2026</span> APEXclusive · Automotive Advisory · Maastricht
+      </a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
