@@ -26,6 +26,44 @@
   <a class="skip-link" href="#verzekering-vergelijker">Direct naar de verzekering vergelijker</a>
   <div id="progress"></div>
 
+  <!-- CHAT BUBBLE -->
+  <button class="apex-bubble" type="button" onclick="apexToggle()" aria-label="Open chat">
+    <span class="apex-bubble-dot"></span>Chat met ons
+  </button>
+
+  <!-- CHAT WINDOW -->
+  <div class="apex-chat-win" id="apex-chat-win" aria-live="polite">
+    <div class="chat-hdr">
+      <div class="chat-hdr-av" aria-hidden="true">A</div>
+      <div class="chat-hdr-info">
+        <div class="chat-hdr-name">APEXclusive</div>
+        <div class="chat-hdr-sub">Private Vehicle Advisory</div>
+        <div class="chat-online">Online · reageert direct</div>
+      </div>
+      <button class="chat-x" type="button" onclick="apexToggle()" aria-label="Sluit chat">✕</button>
+    </div>
+    <div id="apex-msgs" class="chat-msgs"></div>
+    <div id="apex-toast" class="chat-toast"></div>
+    <div class="chat-contact-form" id="apex-contact-form">
+      <input id="apex-contact-name"  class="chat-contact-input" type="text"  placeholder="Naam">
+      <input id="apex-contact-email" class="chat-contact-input" type="email" placeholder="E-mailadres">
+      <input id="apex-contact-phone" class="chat-contact-input" type="tel"   placeholder="06-nummer">
+      <button class="chat-contact-btn" type="button" onclick="apexSubmitContact()">Verstuur contactgegevens</button>
+    </div>
+    <div class="chat-quick" id="apex-quick">
+      <button class="chat-qbtn" type="button" onclick="apexQuick('BPM kosten')">BPM kosten</button>
+      <button class="chat-qbtn" type="button" onclick="apexQuick('Importproces')">Importproces</button>
+      <button class="chat-qbtn" type="button" onclick="apexQuick('Bijkomende kosten')">Bijkomende kosten</button>
+      <button class="chat-qbtn" type="button" onclick="apexQuick('Over APEXclusive')">Over APEXclusive</button>
+      <button class="chat-qbtn" type="button" onclick="apexRequestTransfer()">Adviseur spreken</button>
+    </div>
+    <div class="chat-inp-row">
+      <input id="apex-inp" class="chat-inp" type="text" placeholder="Stel uw vraag..." autocomplete="off">
+      <button id="apex-send" class="chat-send-btn" type="button" onclick="apexSend()" aria-label="Verstuur">→</button>
+    </div>
+    <div class="chat-foot">APEXclusive · Maastricht · AI Adviseur · Geen financieel advies</div>
+  </div>
+
   <header>
     <a href="https://apexclusive.nl" class="brand" target="_blank" rel="noreferrer">
       <span class="brand-apex">APEX</span>
@@ -90,40 +128,49 @@
 
               <div class="field">
                 <label class="field-lbl" for="vehicle-make">Merk en model</label>
-                <input class="fi" id="vehicle-make" name="vehicleMake" type="text" value="Volkswagen Golf" required placeholder="Bijv. Volkswagen Golf">
+                <input class="fi" id="vehicle-make" name="vehicleMake" type="text" required placeholder="Bijv. Volkswagen Golf">
               </div>
 
               <div class="field">
                 <label class="field-lbl" for="vehicle-year">Bouwjaar</label>
                 <div class="fi-wrap">
-                  <input class="fi" id="vehicle-year" name="vehicleYear" type="number" min="1980" max="2026" value="2018" required placeholder="2018">
+                  <input class="fi" id="vehicle-year" name="vehicleYear" type="number" min="1980" max="2026" required placeholder="2018">
                 </div>
                 <p class="field-help">Oudere auto's beïnvloeden premie en dekking.</p>
               </div>
 
               <div class="field">
                 <label class="field-lbl" for="vehicle-value">Catalogus / marktwaarde</label>
-                 <div class="field">
-                   <label class="field-lbl" for="license-plate">Kenteken (verplicht)</label>
-                   <div class="fi-inline">
-                    <input class="fi" id="license-plate" name="licensePlate" type="text" maxlength="10" placeholder="Bijv. 25-RKZ-3" required aria-required="true">
-                    <button type="button" class="btn small" id="lookup-plate">Zoek kenteken <span id="lookup-spinner" class="spinner" aria-hidden="true" hidden></span></button>
-                   </div>
-                   <p class="field-help">Vul een Nederlands kenteken in. Alle gegevens en premie worden automatisch gevuld via kentekenzoek.</p>
-                 </div>
-                <div class="fi-wrap">
-                  <span class="fi-prefix">€</span>
-                  <input class="fi" id="vehicle-value" name="vehicleValue" type="number" min="500" step="100" value="14500" required placeholder="14.500">
+                <div class="field">
+                  <label class="field-lbl" for="license-plate">Kenteken (verplicht)</label>
+                  <div class="fi-inline">
+                    <div class="plate" id="plate-ui" aria-hidden="false">
+                      <div class="plate-eu">NL</div>
+                      <input class="plate-input fi" id="license-plate" name="licensePlate" type="text" maxlength="10" placeholder="  __-___-__" required aria-required="true" aria-label="Kenteken">
+                    </div>
+                  </div>
+                  <p class="field-help">Vul een Nederlands kenteken in. Zodra het correct is ingevuld, zoekt de tool automatisch de voertuiggegevens.</p>
                 </div>
                 <p class="field-help">Gebruik actuele marktwaarde voor beste indicatie.</p>
+
+                <div class="value-summary-row">
+                  <div class="value-summary-card" id="catalogue-value-box">
+                    <span>Cataloguswaarde</span>
+                    <strong>—</strong>
+                  </div>
+                  <div class="value-summary-card" id="market-value-box">
+                    <span>Marktwaarde</span>
+                    <strong>—</strong>
+                  </div>
+                </div>
               </div>
 
                     <div class="field-actions" style="margin-top:.5rem">
-                      <div id="value-source-note" class="field-help" style="display:inline-block;margin-left:.6rem">Vul eerst kenteken in en klik op "Zoek kenteken"</div>
+                      <div id="value-source-note" class="field-help" style="display:inline-block;margin-left:.6rem">Vul een geldig kenteken in; de gegevens worden automatisch opgehaald.</div>
                       <span id="value-badge" class="value-badge" hidden>Gevonden via kenteken</span>
                     </div>
               <div class="field">
-                <label class="field-lbl" for="annual-km">Jaarlijkse kilometerstand</label>
+                <label class="field-lbl" for="annual-km">Jaarlijkse kilometers</label>
                 <select class="fi" id="annual-km" name="annualKm">
                   <option value="5000">Tot 5.000 km</option>
                   <option value="10000" selected>5.000–10.000 km</option>
