@@ -127,15 +127,17 @@ function initToggle(toggleWrapperId) {
 }
 
 function updateInlineSummary() {
-  const value = Number(document.getElementById('vehicle-value').value) || 0;
+  const rawValue = document.getElementById('vehicle-value').value;
+  const value = rawValue === '' ? null : Number(rawValue) || 0;
   const ded = document.getElementById('deductible').value || '—';
-  const coverage = Array.from(document.getElementsByName('coverage')).find(r=>r.checked)?.value || 'wa';
+  const coverage = Array.from(document.getElementsByName('coverage')).find(r=>r.checked)?.value || null;
   const principalEl = document.getElementById('summary-principal');
   const durationEl  = document.getElementById('summary-duration-inline');
   const downEl      = document.getElementById('summary-down');
-  if (principalEl) principalEl.textContent = nlCurrency.format(value);
-  if (durationEl)  durationEl.textContent  = coverage.toUpperCase();
-  if (downEl)      downEl.textContent      = `Eigen risico: € ${ded}`;
+  if (principalEl) principalEl.textContent = (value === null ? '—' : nlCurrency.format(value));
+  if (durationEl)  durationEl.textContent  = (coverage === null ? '—' : coverage.toUpperCase());
+  // only show deductible when vehicle data from kenteken exists
+  if (downEl)      downEl.textContent      = (vehicleFromPlate ? `Eigen risico: € ${ded}` : '—');
 }
 
 function preferenceWeights(preference) {
@@ -235,20 +237,156 @@ function mockLookupByPlate(plate) {
   return mockPlateDB[key] || null;
 }
 
+function parseRdwYear(candidate) {
+  if (candidate == null) return null;
+  const raw = String(candidate).trim();
+  if (!raw) return null;
+  if (/^\d{4}$/.test(raw)) return Number(raw);
+  if (/^\d{8}$/.test(raw)) return Number(raw.slice(0, 4));
+  if (/^\d{4}[-\.]\d{2}[-\.]\d{2}$/.test(raw)) return Number(raw.slice(0, 4));
+  if (/^\d{4}\s*\/\s*\d{2}$/.test(raw)) return Number(raw.slice(0, 4));
+  const date = new Date(raw);
+  if (!Number.isNaN(date.getTime())) {
+    return date.getFullYear();
+  }
+  return null;
+}
+
+// Try RDW Open Data lookup for the given plate (returns {make, year, estValue} or null)
+async function fetchRdwByPlate(plate) {
+  const key = String(plate || '').toUpperCase();
+  if (!key) return null;
+
+  // First try local proxy (useful for dev and avoids CORS). Try common dev ports, then fall back to direct RDW fetch.
+  const proxyPorts = [5000, 5001];
+  for (const p of proxyPorts) {
+    const proxyUrl = `http://127.0.0.1:${p}/rdw?kenteken=${encodeURIComponent(key)}`;
+    try {
+      const pr = await fetch(proxyUrl, { cache: 'no-cache' });
+      if (pr.ok) {
+        const j = await pr.json();
+        console.debug('RDW proxy response', {port: p, body: j});
+        // proxy returns { source, kenteken, data }
+        const row = j && j.data ? j.data : (Array.isArray(j) && j.length ? j[0] : j);
+        if (row) {
+          const make = row.merk || row.handelsbenaming || row.handelsbenaming_merk || row.voertuigsoort || row.opmerkingen || '';
+          let year = null;
+          const yearCandidates = [
+            row.bouwjaar,
+            row.bouwjaar_veh,
+            row.bouwjaar_voertuig,
+            row.datum_eerste_toelating,
+            row.datum_eerste_toelating_dt,
+            row.datum_eerste_tenaamstelling_in_nederland,
+            row.datum_eerste_tenaamstelling_in_nederland_dt
+          ].filter(Boolean);
+
+          for (const candidate of yearCandidates) {
+            const y = parseRdwYear(candidate);
+            if (Number.isInteger(y) && y >= 1900 && y <= new Date().getFullYear() + 1) {
+              year = y;
+              break;
+            }
+          }
+
+          if (year) year = Number(String(year).slice(0,4));
+          const finalYear = year || ((new Date()).getFullYear() - 5);
+        // prefer an explicit RDW price when available
+        const rdwPrice = extractPriceFromRdwRow(row);
+        const marketValue = estimateValueFromMakeModel(make || '', finalYear);
+        const estValue = rdwPrice || marketValue;
+        return {
+          make: make || 'Onbekend',
+          year: finalYear,
+          estValue,
+          marketValue,
+          catalogueValue: rdwPrice || null
+        };
+      }
+    }
+  } catch (e) { console.warn('RDW proxy fetch failed', e); }
+  }
+
+  // Fallback: direct RDW Open Data fetch (original behavior)
+  const url = 'https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=' + encodeURIComponent(key);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    console.debug('RDW direct response', data);
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const row = data[0];
+    const make = row.merk || row.handelsbenaming || row.handelsbenaming_merk || row.voertuigsoort || row.opmerkingen || '';
+    let year = null;
+    const yearCandidates = [
+      row.bouwjaar,
+      row.bouwjaar_veh,
+      row.bouwjaar_voertuig,
+      row.datum_eerste_toelating,
+      row.datum_eerste_toelating_dt,
+      row.datum_eerste_tenaamstelling_in_nederland,
+      row.datum_eerste_tenaamstelling_in_nederland_dt
+    ].filter(Boolean);
+
+    for (const candidate of yearCandidates) {
+      const y = parseRdwYear(candidate);
+      if (Number.isInteger(y) && y >= 1900 && y <= new Date().getFullYear() + 1) {
+        year = y;
+        break;
+      }
+    }
+
+    if (year) year = Number(String(year).slice(0,4));
+    const finalYear = year || ((new Date()).getFullYear() - 5);
+    const rdwPrice = extractPriceFromRdwRow(row);
+    const marketValue = estimateValueFromMakeModel(make || '', finalYear);
+    const estValue = rdwPrice || marketValue;
+    return {
+      make: make || 'Onbekend',
+      year: finalYear,
+      estValue,
+      marketValue,
+      catalogueValue: rdwPrice || null
+    };
+  } catch (e) {
+    console.warn('RDW lookup failed', e);
+    return null;
+  }
+}
+
 function showLookupSpinner(on=true) {
   const s = document.getElementById('lookup-spinner');
-  const btn = document.getElementById('lookup-plate');
   if (s) s.hidden = !on;
-  if (btn) btn.disabled = on;
 }
 
 function showValueBadge(source) {
   const b = document.getElementById('value-badge');
   const note = document.getElementById('value-source-note');
   if (!b) return;
-  if (source === 'kenteken') { b.hidden = false; b.textContent = 'Gevonden via kenteken'; if (note) note.textContent = 'Waarde automatisch aangevuld via kenteken'; }
-  else if (source === 'estimate') { b.hidden = false; b.textContent = 'Schatting merk/model'; if (note) note.textContent = 'Geschatte waarde'; }
-  else { b.hidden = true; if (note) note.textContent = 'Voer kenteken in en klik op "Zoek kenteken"'; }
+  if (source === 'kenteken') {
+    b.hidden = false;
+    b.textContent = 'Kenteken herkend';
+    if (note) note.textContent = 'Waarde automatisch aangevuld via kenteken';
+  } else if (source === 'estimate') {
+    b.hidden = false;
+    b.textContent = 'Schatting merk/model';
+    if (note) note.textContent = 'Geschatte waarde';
+  } else {
+    b.hidden = true;
+    if (note) note.textContent = 'Vul een geldig kenteken in; de gegevens worden automatisch opgehaald.';
+  }
+}
+
+function updateValueSummaryBoxes(data) {
+  const catEl = document.getElementById('catalogue-value-box');
+  const mktEl = document.getElementById('market-value-box');
+  if (!catEl || !mktEl) return;
+  const catalogue = data && data.catalogueValue;
+  const market = data && (data.marketValue || data.estValue);
+  catEl.querySelector('strong').textContent = catalogue ? nlCurrency.format(catalogue) : 'Niet beschikbaar';
+  mktEl.querySelector('strong').textContent = market ? nlCurrency.format(market) : '—';
+  catEl.classList.toggle('active', !!catalogue);
+  mktEl.classList.toggle('active', !!market);
 }
 
 function cachePlateResult(key, data) {
@@ -283,18 +421,70 @@ function estimateValueFromMakeModel(make, year) {
   return value;
 }
 
+// Extract a plausible price (eur) from an RDW row object. Returns number or null.
+function extractPriceFromRdwRow(row) {
+  if (!row || typeof row !== 'object') return null;
+  const keys = Object.keys(row);
+  const candidates = [];
+  for (const k of keys) {
+    const v = row[k];
+    if (v == null) continue;
+    const s = String(v).replace(/\s+/g,'');
+    // remove currency symbols and non digit chars except digits
+    const digits = s.replace(/[^0-9]/g,'');
+    if (!digits) continue;
+    const num = Number(digits);
+    if (!isFinite(num) || num <= 0) continue;
+    candidates.push({ key: k.toLowerCase(), raw: num });
+  }
+  if (candidates.length === 0) return null;
+  console.debug('RDW price candidates', candidates);
+  // prefer fields that include 'catalog' or 'prijs'
+  const prefer = candidates.find(c => /catalog|prijs|catalogus|catalogusprijs|catalogus_prijs/.test(c.key));
+  const best = prefer || candidates.sort((a,b) => b.raw - a.raw)[0];
+  if (!best) return null;
+  let val = best.raw;
+  // Heuristics: if value looks like cents (very large) convert to euros
+  if (val > 1000000) { val = Math.round(val / 100); }
+  // If value still too large, try dividing by 10 or 100 once more (defensive)
+  if (val > 1000000) {
+    if (val / 10 > 1000 && val / 10 < 1000000) val = Math.round(val / 10);
+    else if (val / 100 > 1000 && val / 100 < 1000000) val = Math.round(val / 100);
+  }
+  // final sanity: ignore unrealistically small (<500) or huge (>2_000_000)
+  if (val < 500 || val > 2000000) return null;
+  console.debug('RDW chosen price (eur)', val);
+  return Math.round(val);
+}
+
 function applyVehicleData(data, source='auto'){
   if (!data) return;
+  if (data.marketValue == null && data.estValue != null) {
+    data.marketValue = data.estValue;
+  }
   const vm = document.getElementById('vehicle-make');
   const vy = document.getElementById('vehicle-year');
   const vv = document.getElementById('vehicle-value');
   if (vm && data.make) vm.value = data.make;
   if (vy && data.year) vy.value = data.year;
   if (vv && data.estValue) { vv.value = Number(data.estValue); vv.setAttribute('data-value-source', source); }
+  updateValueSummaryBoxes(data);
   const note = document.getElementById('value-source-note'); if (note) note.textContent = (source==='kenteken' ? 'Waarde ingevuld via kenteken' : source==='estimate' ? 'Schatting op merk/model' : 'Handmatige invoer');
   // mark that vehicle data originates from kenteken
   vehicleFromPlate = (source === 'kenteken');
   const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.disabled = !vehicleFromPlate;
+}
+
+function lockVehicleFields(lock = true) {
+  const vm = document.getElementById('vehicle-make');
+  const vy = document.getElementById('vehicle-year');
+  const vv = document.getElementById('vehicle-value');
+  if (vm) { vm.readOnly = lock; if (lock) vm.classList.add('locked'); else vm.classList.remove('locked'); }
+  if (vy) { vy.readOnly = lock; if (lock) vy.classList.add('locked'); else vy.classList.remove('locked'); }
+  if (vv) { vv.readOnly = lock; if (lock) vv.classList.add('locked'); else vv.classList.remove('locked'); }
+  // control next-step navigation
+  const nextBtn = document.getElementById('next-step');
+  if (nextBtn) nextBtn.disabled = lock;
 }
 
 function computeOffers(input) {
@@ -366,7 +556,7 @@ function bindUI() {
 
   loanForm?.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!vehicleFromPlate) { showFormFeedback('Voer eerst een geldig Nederlands kenteken in en klik op "Zoek kenteken".'); return; }
+    if (!vehicleFromPlate) { showFormFeedback('Voer eerst een geldig Nederlands kenteken in. De gegevens worden automatisch opgehaald zodra het kenteken compleet is.'); return; }
     const input = gatherInput();
     const offers = computeOffers(input);
     lastRankedOffers = offers;
@@ -384,11 +574,124 @@ function bindUI() {
   // when user edits the license plate, require a new lookup
   const plateInput = document.getElementById('license-plate');
   if (plateInput) {
-    plateInput.addEventListener('input', () => {
+    // Auto-format plate display while typing and reset lookup state
+    function formatPlateDisplay(raw) {
+      const s = String(raw||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+      const len = s.length;
+      if (len <= 2) return s;
+      if (len === 3) return s.slice(0,2) + '-' + s.slice(2);
+      if (len === 4) return s.slice(0,2) + '-' + s.slice(2);
+      if (len === 5) return s.slice(0,2) + '-' + s.slice(2,5);
+      const formatParts = (parts) => {
+        const out = [];
+        let index = 0;
+        for (const part of parts) {
+          out.push(s.slice(index, index + part));
+          index += part;
+          if (index >= s.length) break;
+        }
+        return out.join('-');
+      };
+      const patterns = [
+        { regex: /^[A-Z]{2}\d{4}$/, parts: [2,2,2] },
+        { regex: /^\d{4}[A-Z]{2}$/, parts: [2,2,2] },
+        { regex: /^\d{2}[A-Z]{2}\d{2}$/, parts: [2,2,2] },
+        { regex: /^[A-Z]{2}\d{2}[A-Z]{2}$/, parts: [2,2,2] },
+        { regex: /^[A-Z]{2}[A-Z]{2}\d{2}$/, parts: [2,2,2] },
+        { regex: /^[A-Z]{3}\d{2}[A-Z]$/, parts: [3,2,1] },
+        { regex: /^[A-Z]\d{2}[A-Z]{3}$/, parts: [1,2,3] },
+        { regex: /^[A-Z]{2}\d{3}[A-Z]$/, parts: [2,3,1] },
+        { regex: /^[A-Z]\d{3}[A-Z]{2}$/, parts: [1,3,2] },
+        { regex: /^\d{2}[A-Z]{3}\d$/, parts: [2,3,1] },
+        { regex: /^\d[A-Z]{3}\d{2}$/, parts: [1,3,2] },
+        { regex: /^[A-Z]{2}\d{3}[A-Z]{2}$/, parts: [2,3,2] },
+        { regex: /^\d{2}[A-Z]{4}\d$/, parts: [2,4,1] },
+      ];
+      for (const pattern of patterns) {
+        if (pattern.regex.test(s)) return formatParts(pattern.parts);
+      }
+      if (len === 6) return [s.slice(0,2), s.slice(2,4), s.slice(4,6)].join('-');
+      if (len === 7) return [s.slice(0,3), s.slice(3,5), s.slice(5)].join('-');
+      if (len >= 8) return [s.slice(0,2), s.slice(2,4), s.slice(4,6), s.slice(6,8)].join('-');
+      return s;
+    }
+
+    plateInput.addEventListener('input', (ev) => {
+      const raw = ev.target.value || '';
+      const normalized = raw.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+      const formatted = formatPlateDisplay(normalized);
+      // set formatted value and keep caret at end for simplicity
+      ev.target.value = formatted;
       vehicleFromPlate = false;
       const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.disabled = true;
-      const note = document.getElementById('value-source-note'); if (note) note.textContent = 'Vul kenteken en klik op "Zoek kenteken"';
+      const note = document.getElementById('value-source-note'); if (note) note.textContent = 'Vul een geldig kenteken in; zodra het compleet is, wordt het automatisch opgezocht.';
+      // re-lock vehicle fields when plate changes
+      lockVehicleFields(true);
+      showValueBadge(null);
+      if (plateLookupTimer) clearTimeout(plateLookupTimer);
+      plateLookupTimer = setTimeout(() => attemptAutoPlateLookup(normalized), 450);
     });
+  }
+  // clicking the plate UI focuses the input
+  const plateUi = document.getElementById('plate-ui');
+  if (plateUi) plateUi.addEventListener('click', () => { const p = document.getElementById('license-plate'); if (p) p.focus(); });
+
+  let plateLookupTimer = null;
+  async function attemptAutoPlateLookup(normalized) {
+    if (!normalized) return;
+    const valid = /^[A-Z0-9]{4,8}$/.test(normalized) && /[0-9]/.test(normalized) && /[A-Z]/.test(normalized);
+    if (!valid) return;
+    const cached = getCachedPlate(normalized);
+    if (cached) {
+      applyVehicleData(cached, 'kenteken');
+      showValueBadge('kenteken');
+      showFormFeedback('Voertuiggegevens geladen uit cache.', 'success');
+      updateInlineSummary();
+      lockVehicleFields(false);
+      return;
+    }
+
+    showLookupSpinner(true);
+    let rdwData = null;
+    try {
+      rdwData = await fetchRdwByPlate(normalized);
+    } catch (e) {
+      rdwData = null;
+    }
+    showLookupSpinner(false);
+
+    if (rdwData) {
+      applyVehicleData(rdwData, 'kenteken');
+      cachePlateResult(normalized, rdwData);
+      showValueBadge('kenteken');
+      showFormFeedback('Voertuiggegevens gevonden via RDW.', 'success');
+      updateInlineSummary();
+      lockVehicleFields(false);
+      return;
+    }
+
+    showLookupSpinner(true);
+    setTimeout(() => {
+      showLookupSpinner(false);
+      const data = mockLookupByPlate(normalized);
+      if (data) {
+        applyVehicleData({ make: data.make, year: data.year, estValue: data.estValue, marketValue: data.estValue, catalogueValue: null }, 'kenteken');
+        cachePlateResult(normalized, { make: data.make, year: data.year, estValue: data.estValue, marketValue: data.estValue, catalogueValue: null });
+        showValueBadge('kenteken');
+        showFormFeedback('Voertuiggegevens gevonden via kenteken.', 'success');
+        updateInlineSummary();
+        lockVehicleFields(false);
+      } else {
+        const fallbackYear = (new Date()).getFullYear() - 5;
+        const est = estimateValueFromMakeModel('', fallbackYear);
+        const fallback = { make: 'Onbekend', year: fallbackYear, estValue: est, marketValue: est, catalogueValue: null };
+        applyVehicleData(fallback, 'estimate');
+        showValueBadge('estimate');
+        showFormFeedback('Geen exacte match gevonden; schatting toegepast. Pas gegevens aan indien nodig.', 'success');
+        updateInlineSummary();
+        lockVehicleFields(false);
+      }
+    }, 700);
   }
 
   // progress bar and header scroll behavior
@@ -409,38 +712,6 @@ function bindUI() {
   initToggle('legal-toggle');
 
   // kenteken lookup and value helpers
-  document.getElementById('lookup-plate')?.addEventListener('click', () => {
-    const plate = document.getElementById('license-plate')?.value || '';
-    const normalized = normalizePlate(plate);
-    // basic NL plate validation: 4-8 alnum and at least one digit and one letter
-    const valid = /^[A-Z0-9]{4,8}$/.test(normalized) && /[0-9]/.test(normalized) && /[A-Z]/.test(normalized);
-    if (!normalized || !valid) { showFormFeedback('Voer een geldig Nederlands kenteken in (letters en cijfers).'); return; }
-    // check cache first
-    const cached = getCachedPlate(normalized);
-    if (cached) {
-      applyVehicleData(cached, 'kenteken');
-      showValueBadge('kenteken');
-      showFormFeedback('Voertuiggegevens geladen uit cache.', 'success');
-      updateInlineSummary();
-      return;
-    }
-    // show spinner and simulate lookup
-    showLookupSpinner(true);
-    setTimeout(() => {
-      showLookupSpinner(false);
-      const data = mockLookupByPlate(normalized);
-      if (data) {
-        applyVehicleData({ make: data.make, year: data.year, estValue: data.estValue }, 'kenteken');
-        cachePlateResult(normalized, { make: data.make, year: data.year, estValue: data.estValue });
-        showValueBadge('kenteken');
-        showFormFeedback('Voertuiggegevens gevonden via kenteken.', 'success');
-        updateInlineSummary();
-      } else {
-        showFormFeedback('Geen exacte match gevonden voor kenteken. Probeer opnieuw of neem handmatig contact op.');
-        showValueBadge(null);
-      }
-    }, 700);
-  });
   // hide/disable alternative value controls — kenteken is required for the workflow
   const estBtn = document.getElementById('estimate-from-make'); if (estBtn) estBtn.hidden = true;
   const manBtn = document.getElementById('manual-value'); if (manBtn) manBtn.hidden = true;
@@ -448,9 +719,173 @@ function bindUI() {
 
 document.addEventListener('DOMContentLoaded', () => {
   fetchLiveRatesAndApply().then(() => {
-    bindUI();
-    updateInlineSummary();
+    // clear and lock vehicle fields at initial load so user must use kenteken
+    const vm = document.getElementById('vehicle-make'); if (vm) vm.value = '';
+    const vy = document.getElementById('vehicle-year'); if (vy) vy.value = '';
+    const vv = document.getElementById('vehicle-value'); if (vv) { vv.value = ''; vv.removeAttribute('data-value-source'); }
+    lockVehicleFields(true);
+    const plateEl = document.getElementById('license-plate');
+    if (plateEl) {
+      // ensure plate input is editable and visible even if other initialization failed
+      plateEl.readOnly = false;
+      plateEl.disabled = false;
+      plateEl.removeAttribute('hidden');
+      plateEl.style.display = plateEl.style.display || 'inline-block';
+      plateEl.focus();
+    }
     // require kenteken lookup before allowing submit
     const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.disabled = true;
+    bindUI();
+    updateInlineSummary();
+    // ensure first wizard step is visible (force if showStep didn't take effect)
+    try {
+      const firstStep = document.querySelector('.wizard-step[data-step="1"]');
+      if (firstStep) { firstStep.classList.add('active'); firstStep.style.display = 'block'; }
+      updateStepIndicators(); updateWizardButtons();
+    } catch (e) { /* ignore */ }
   });
+});
+/* ══ CHAT ══ */
+var _CHAT_API = '/api/chat';
+var _msgs = []; var _open = false; var _busy = false;
+try { var _s = localStorage.getItem('apex_chat_v1'); if(_s) _msgs = JSON.parse(_s); } catch(e){ _msgs=[]; }
+function _saveH(){ try{ localStorage.setItem('apex_chat_v1', JSON.stringify(_msgs.slice(-20))); }catch(e){} }
+function _getCtx(){ return 'home'; }
+var _cw={ home:'Goedendag! Ik ben de digitale adviseur van **APEXclusive**. Waarmee kan ik u helpen?' };
+function apexToggle(){
+  _open=!_open;
+  var win=document.getElementById('apex-chat-win');
+  if(_open){
+    win.classList.add('open');
+    if(_msgs.length===0){
+      var w=_cw[_getCtx()]||_cw.home;
+      _addMsg('bot',w);
+      _msgs.push({role:'assistant',content:w});
+      _saveH();
+    } else {
+      var wrap=document.getElementById('apex-msgs');
+      if(wrap && wrap.children.length===0) _renderH();
+    }
+    setTimeout(function(){ var inp=document.getElementById('apex-inp'); if(inp) inp.focus(); },300);
+  } else {
+    if(win) win.classList.remove('open');
+  }
+}
+function _renderH(){
+  _msgs.forEach(function(m){
+    if(m.role==='user') _addMsg('user',m.content,true);
+    if(m.role==='assistant') _addMsg('bot',m.content,true);
+  });
+}
+function apexQuick(t){
+  var quick = document.getElementById('apex-quick');
+  if(quick) quick.style.display='none';
+  var inp = document.getElementById('apex-inp');
+  if(inp) inp.value=t;
+  apexSend();
+}
+function apexRequestTransfer(){
+  var quick = document.getElementById('apex-quick');
+  if(quick) quick.style.display='none';
+  _addMsg('bot','Uiteraard. Laat uw naam, e-mailadres en 06-nummer achter — één van onze APEXclusive adviseurs neemt zo spoedig mogelijk persoonlijk contact met u op.');
+  var form = document.getElementById('apex-contact-form');
+  if(form) form.classList.add('open');
+}
+function apexSubmitContact(){
+  var n=document.getElementById('apex-contact-name').value.trim();
+  var e=document.getElementById('apex-contact-email').value.trim();
+  var p=document.getElementById('apex-contact-phone').value.trim();
+  if(!n&&!e&&!p){alert('Vul ten minste één veld in.');return;}
+  var form=document.getElementById('apex-contact-form');
+  if(form) form.classList.remove('open');
+  var msg=[n&&'Naam: '+n,e&&'E-mail: '+e,p&&'06: '+p].filter(Boolean).join(' · ');
+  var inp=document.getElementById('apex-inp');
+  if(inp) inp.value=msg;
+  apexSend();
+}
+async function apexSend(){
+  var inp=document.getElementById('apex-inp');
+  if(!inp) return;
+  var msg=inp.value.trim();
+  if(!msg||_busy) return;
+  inp.value='';
+  _addMsg('user',msg);
+  _msgs.push({role:'user',content:msg});
+  _saveH();
+  var quick = document.getElementById('apex-quick'); if(quick) quick.style.display='none';
+  var contactForm = document.getElementById('apex-contact-form'); if(contactForm) contactForm.classList.remove('open');
+  _busy=true;
+  var sendBtn=document.getElementById('apex-send'); if(sendBtn) sendBtn.disabled=true;
+  var bDiv=_createBot();
+  var cDiv=bDiv.querySelector('.cmsg-content');
+  var full='';
+  try{
+    var res=await fetch(_CHAT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:_msgs})});
+    if(!res.ok){
+      var d=await res.json().catch(function(){return{};});
+      cDiv.innerHTML=_fmt('⚠️ '+(d.error||'Er ging iets mis.'));
+      _busy=false;
+      if(sendBtn) sendBtn.disabled=false;
+      return;
+    }
+    var d=await res.json();
+    full=d.reply||d.text||d.answer||'';
+    if(d.error) cDiv.innerHTML=_fmt('⚠️ '+d.error);
+    else if(full) cDiv.innerHTML=_fmt(full);
+    else cDiv.innerHTML=_fmt('Geen antwoord ontvangen.');
+    if(full){_msgs.push({role:'assistant',content:full});_saveH();}
+  }catch(e){
+    cDiv.innerHTML=_fmt('Verbindingsfout. Probeer opnieuw of neem contact op via info@apexclusive.nl.');
+  }
+  _busy=false;
+  if(sendBtn) sendBtn.disabled=false;
+}
+function _createBot(){
+  var wrap=document.getElementById('apex-msgs');
+  if(!wrap) return document.createElement('div');
+  var div=document.createElement('div');
+  div.className='cmsg bot';
+  var lbl=document.createElement('div');
+  lbl.className='cmsg-lbl';
+  lbl.textContent='APEXclusive Adviseur';
+  div.appendChild(lbl);
+  var c=document.createElement('div');
+  c.className='cmsg-content';
+  c.innerHTML='<span class="chat-cursor">&#9607;</span>';
+  div.appendChild(c);
+  wrap.appendChild(div);
+  wrap.scrollTop=wrap.scrollHeight;
+  return div;
+}
+function _addMsg(rol,tekst,silent){
+  var wrap=document.getElementById('apex-msgs');
+  if(!wrap) return null;
+  var div=document.createElement('div');
+  div.className='cmsg '+rol;
+  var lbl=document.createElement('div');
+  lbl.className='cmsg-lbl';
+  lbl.textContent=rol==='bot'?'APEXclusive Adviseur':'U';
+  div.appendChild(lbl);
+  var c=document.createElement('div');
+  c.className='cmsg-content';
+  c.innerHTML=_fmt(tekst);
+  div.appendChild(c);
+  wrap.appendChild(div);
+  if(!silent) wrap.scrollTop=wrap.scrollHeight;
+  return div;
+}
+function _fmt(t){
+  if(!t) return '';
+  return t
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/\n/g,'<br>');
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(_open) apexToggle();
+  }
 });
