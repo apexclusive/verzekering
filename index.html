@@ -103,6 +103,14 @@
 
               <div class="field">
                 <label class="field-lbl" for="vehicle-value">Catalogus / marktwaarde</label>
+                 <div class="field">
+                   <label class="field-lbl" for="license-plate">Kenteken (verplicht)</label>
+                   <div class="fi-inline">
+                    <input class="fi" id="license-plate" name="licensePlate" type="text" maxlength="10" placeholder="Bijv. 25-RKZ-3" required aria-required="true">
+                    <button type="button" class="btn small" id="lookup-plate">Zoek kenteken <span id="lookup-spinner" class="spinner" aria-hidden="true" hidden></span></button>
+                   </div>
+                   <p class="field-help">Vul een Nederlands kenteken in. Alle gegevens en premie worden automatisch gevuld via kentekenzoek.</p>
+                 </div>
                 <div class="fi-wrap">
                   <span class="fi-prefix">€</span>
                   <input class="fi" id="vehicle-value" name="vehicleValue" type="number" min="500" step="100" value="14500" required placeholder="14.500">
@@ -110,6 +118,10 @@
                 <p class="field-help">Gebruik actuele marktwaarde voor beste indicatie.</p>
               </div>
 
+                    <div class="field-actions" style="margin-top:.5rem">
+                      <div id="value-source-note" class="field-help" style="display:inline-block;margin-left:.6rem">Vul eerst kenteken in en klik op "Zoek kenteken"</div>
+                      <span id="value-badge" class="value-badge" hidden>Gevonden via kenteken</span>
+                    </div>
               <div class="field">
                 <label class="field-lbl" for="annual-km">Jaarlijkse kilometerstand</label>
                 <select class="fi" id="annual-km" name="annualKm">
