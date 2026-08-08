@@ -458,6 +458,15 @@ textarea.fi,
 
 header.scrolled { box-shadow: 0 6px 18px rgba(0,0,0,.45); background: rgba(8,8,8,.96); }
 
+/* lookup spinner */
+.spinner { display:inline-block; width:12px; height:12px; margin-left:.5rem; vertical-align:middle; border:2px solid rgba(255,255,255,0.18); border-top-color:rgba(255,255,255,0.9); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* value source badge */
+.value-badge { display:inline-block; margin-left:.6rem; background:linear-gradient(180deg,#0b6 0%,#039a4d 100%); color:#fff; padding:.18rem .5rem; border-radius:999px; font-size:.78rem; box-shadow:0 6px 18px rgba(3,154,77,0.18); }
+
+button[disabled], .btn[disabled] { opacity:.6; pointer-events:none; }
+
 footer { padding:1.2rem var(--pd); text-align:center; color:var(--mt); }
 
 @media (max-width:800px) {
