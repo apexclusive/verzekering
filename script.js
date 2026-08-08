@@ -15,6 +15,7 @@ let lastRankedOffers = [];
 let currentStep = 1;
 const totalSteps = 4;
 const completedSteps = new Set();
+let vehicleFromPlate = false;
 
 const providers = [
   { name: 'Allianz', basePremium: 720, setupFee: 0, url: 'https://www.allianz.nl', note: 'Grote speler, brede dekking' },
@@ -219,6 +220,83 @@ function gatherInput() {
   };
 }
 
+// --- Kenteken / waarde helpers ---
+function normalizePlate(s) { return String(s||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase(); }
+
+const mockPlateDB = {
+  '25RKZ3': { make: 'Volkswagen Golf', year: 2018, estValue: 14500 },
+  'AB123C': { make: 'Toyota Corolla', year: 2015, estValue: 9200 },
+  '12-ABC-3': { make: 'BMW 3-Serie', year: 2020, estValue: 32500 }
+};
+
+function mockLookupByPlate(plate) {
+  const key = normalizePlate(plate);
+  // try direct, then fuzzy by removing non-digits
+  return mockPlateDB[key] || null;
+}
+
+function showLookupSpinner(on=true) {
+  const s = document.getElementById('lookup-spinner');
+  const btn = document.getElementById('lookup-plate');
+  if (s) s.hidden = !on;
+  if (btn) btn.disabled = on;
+}
+
+function showValueBadge(source) {
+  const b = document.getElementById('value-badge');
+  const note = document.getElementById('value-source-note');
+  if (!b) return;
+  if (source === 'kenteken') { b.hidden = false; b.textContent = 'Gevonden via kenteken'; if (note) note.textContent = 'Waarde automatisch aangevuld via kenteken'; }
+  else if (source === 'estimate') { b.hidden = false; b.textContent = 'Schatting merk/model'; if (note) note.textContent = 'Geschatte waarde'; }
+  else { b.hidden = true; if (note) note.textContent = 'Voer kenteken in en klik op "Zoek kenteken"'; }
+}
+
+function cachePlateResult(key, data) {
+  try {
+    const raw = localStorage.getItem('plateCache') || '{}';
+    const obj = JSON.parse(raw);
+    obj[key] = { data, ts: Date.now() };
+    localStorage.setItem('plateCache', JSON.stringify(obj));
+  } catch (e) { /* ignore */ }
+}
+
+function getCachedPlate(key) {
+  try {
+    const raw = localStorage.getItem('plateCache') || '{}';
+    const obj = JSON.parse(raw);
+    const item = obj[key];
+    // invalidate after 30 days
+    if (!item) return null;
+    if (Date.now() - (item.ts || 0) > 1000 * 60 * 60 * 24 * 30) return null;
+    return item.data;
+  } catch (e) { return null; }
+}
+
+function estimateValueFromMakeModel(make, year) {
+  const base = 12000;
+  const age = (new Date()).getFullYear() - (Number(year) || (new Date()).getFullYear());
+  let mult = 1;
+  if (/BMW|AUDI|MERC|PORSCHE|VOLVO/i.test(make)) mult = 1.6;
+  else if (/VOLKSWAGEN|TOYOTA|HONDA|NISSAN/i.test(make)) mult = 1.0;
+  else if (/RENAULT|PEUGEOT|CITROEN/i.test(make)) mult = 0.8;
+  const value = Math.max(600, Math.round(base * mult * Math.max(0.25, 1 - age * 0.06)));
+  return value;
+}
+
+function applyVehicleData(data, source='auto'){
+  if (!data) return;
+  const vm = document.getElementById('vehicle-make');
+  const vy = document.getElementById('vehicle-year');
+  const vv = document.getElementById('vehicle-value');
+  if (vm && data.make) vm.value = data.make;
+  if (vy && data.year) vy.value = data.year;
+  if (vv && data.estValue) { vv.value = Number(data.estValue); vv.setAttribute('data-value-source', source); }
+  const note = document.getElementById('value-source-note'); if (note) note.textContent = (source==='kenteken' ? 'Waarde ingevuld via kenteken' : source==='estimate' ? 'Schatting op merk/model' : 'Handmatige invoer');
+  // mark that vehicle data originates from kenteken
+  vehicleFromPlate = (source === 'kenteken');
+  const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.disabled = !vehicleFromPlate;
+}
+
 function computeOffers(input) {
   const adj = calcRiskAdjustment(input);
   const covMul = coverageMultiplier(input.coverage);
@@ -288,6 +366,7 @@ function bindUI() {
 
   loanForm?.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (!vehicleFromPlate) { showFormFeedback('Voer eerst een geldig Nederlands kenteken in en klik op "Zoek kenteken".'); return; }
     const input = gatherInput();
     const offers = computeOffers(input);
     lastRankedOffers = offers;
@@ -301,6 +380,16 @@ function bindUI() {
     const ev = (el.tagName.toLowerCase() === 'input' && el.type === 'text') ? 'input' : 'change';
     el.addEventListener(ev, updateInlineSummary);
   });
+
+  // when user edits the license plate, require a new lookup
+  const plateInput = document.getElementById('license-plate');
+  if (plateInput) {
+    plateInput.addEventListener('input', () => {
+      vehicleFromPlate = false;
+      const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.disabled = true;
+      const note = document.getElementById('value-source-note'); if (note) note.textContent = 'Vul kenteken en klik op "Zoek kenteken"';
+    });
+  }
 
   // progress bar and header scroll behavior
   const progress = document.getElementById('progress');
@@ -318,6 +407,50 @@ function bindUI() {
   ['coverage-group','payment-freq-group','preference-group'].forEach(initRadioGroup);
   initToggle('roadside-toggle');
   initToggle('legal-toggle');
+
+  // kenteken lookup and value helpers
+  document.getElementById('lookup-plate')?.addEventListener('click', () => {
+    const plate = document.getElementById('license-plate')?.value || '';
+    const normalized = normalizePlate(plate);
+    // basic NL plate validation: 4-8 alnum and at least one digit and one letter
+    const valid = /^[A-Z0-9]{4,8}$/.test(normalized) && /[0-9]/.test(normalized) && /[A-Z]/.test(normalized);
+    if (!normalized || !valid) { showFormFeedback('Voer een geldig Nederlands kenteken in (letters en cijfers).'); return; }
+    // check cache first
+    const cached = getCachedPlate(normalized);
+    if (cached) {
+      applyVehicleData(cached, 'kenteken');
+      showValueBadge('kenteken');
+      showFormFeedback('Voertuiggegevens geladen uit cache.', 'success');
+      updateInlineSummary();
+      return;
+    }
+    // show spinner and simulate lookup
+    showLookupSpinner(true);
+    setTimeout(() => {
+      showLookupSpinner(false);
+      const data = mockLookupByPlate(normalized);
+      if (data) {
+        applyVehicleData({ make: data.make, year: data.year, estValue: data.estValue }, 'kenteken');
+        cachePlateResult(normalized, { make: data.make, year: data.year, estValue: data.estValue });
+        showValueBadge('kenteken');
+        showFormFeedback('Voertuiggegevens gevonden via kenteken.', 'success');
+        updateInlineSummary();
+      } else {
+        showFormFeedback('Geen exacte match gevonden voor kenteken. Probeer opnieuw of neem handmatig contact op.');
+        showValueBadge(null);
+      }
+    }, 700);
+  });
+  // hide/disable alternative value controls — kenteken is required for the workflow
+  const estBtn = document.getElementById('estimate-from-make'); if (estBtn) estBtn.hidden = true;
+  const manBtn = document.getElementById('manual-value'); if (manBtn) manBtn.hidden = true;
 }
 
-document.addEventListener('DOMContentLoaded', () => { fetchLiveRatesAndApply().then(() => { bindUI(); updateInlineSummary(); }); });
+document.addEventListener('DOMContentLoaded', () => {
+  fetchLiveRatesAndApply().then(() => {
+    bindUI();
+    updateInlineSummary();
+    // require kenteken lookup before allowing submit
+    const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.disabled = true;
+  });
+});
