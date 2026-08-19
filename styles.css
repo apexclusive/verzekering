@@ -15,7 +15,8 @@
   --mt: #8a8a8a;
 
   --sf: "Cormorant Garamond", serif;
-  --ss: "Montserrat", sans-serif;
+  --ss: "DM Sans", sans-serif;
+  --logo: "DM Sans", sans-serif;
   --lb: "Oswald", sans-serif;
 
   --pd: clamp(1.25rem, 5vw, 4rem);
@@ -197,15 +198,15 @@ a {
 }
 
 .brand {
-  font-family: var(--sf);
-  letter-spacing: 0.18em;
+  font-family: var(--logo);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 0;
   color: var(--tx);
-  font-size: 1.25rem;
+  font-size: 1.08rem;
 }
 
 .brand-apex {
@@ -214,19 +215,9 @@ a {
   letter-spacing: 0.22em;
 }
 
-.brand-sep {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0 8px;
-  flex-shrink: 0;
-}
+.brand-sep { display:block; width:1px; height:.66em; margin:0 .5rem; background:rgba(255,255,255,.62); flex-shrink:0; }
 
-.brand-sep span {
-  display: block;
-  width: 3px;
-  border-radius: 1px;
-}
+.brand-sep span { display:none; }
 
 .brand-sep span:nth-child(1) {
   height: 5px;
