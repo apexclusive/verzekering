@@ -77,5 +77,5 @@ header::after,footer::before,.page-hero::after,.form-card::before,.result-main::
 footer .ft-tri{display:none!important}
 .btn:not(.gh):hover,.calc-btn:hover,.search-btn:hover{background:#f1f3f4!important;color:var(--apex-ink)!important;border-color:#f1f3f4!important}
 @media(max-width:640px){header{padding:1rem var(--pd)!important}.page-hero{padding:4.5rem var(--pd) 3rem!important}.page-hero h1{font-size:clamp(2.8rem,13vw,4.2rem)!important}.back-btn{padding:.48rem .75rem!important;font-size:.52rem!important}.form-inner{padding:1.35rem 1.1rem!important}.btn{width:100%}.fg{grid-template-columns:1fr!important}.fb{flex-direction:column;gap:.5rem}}
-@media(max-width:640px){.page-hero h1{font-size:clamp(2.2rem,9vw,3.2rem)!important;overflow-wrap:anywhere}}
+@media(max-width:640px){.page-hero h1{width:100%!important;max-width:100%!important;margin-left:0!important;font-size:clamp(2rem,8.5vw,3rem)!important;overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.page-hero h1 em{animation:none!important}}
