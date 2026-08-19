@@ -69,6 +69,7 @@ footer .ft-tri span:nth-child(1){background:var(--apex-green)!important}footer .
 .fb .tric{position:relative;display:inline-block;width:3px;height:12px;background:#fff;border-radius:999px;vertical-align:middle;margin:0 .42rem;opacity:.72;transform:translateY(-.04em)}.fb .tric::before,.fb .tric::after{content:'';position:absolute;bottom:0;width:2px;height:8px;border-radius:999px}.fb .tric::before{right:100%;margin-right:2px;background:var(--apex-green)}.fb .tric::after{left:100%;margin-left:2px;background:var(--apex-red)}
 .apex-bubble{border-radius:0!important;background:rgba(241,243,244,.96)!important;color:var(--apex-ink)!important}
 .apex-chat-win{border-radius:0!important;border-color:rgba(198,203,209,.18)!important}
+.plate-input{color:#0d0f10!important;font-family:var(--apex-label)!important;font-weight:400!important}
 body{background:linear-gradient(180deg,#0d0f10 0%,#141719 52%,#0d0f10 100%)!important}
 body::before,body::after{background:linear-gradient(115deg,rgba(255,255,255,.018),transparent 38%,rgba(255,255,255,.012))!important}
 header::after,footer::before,.page-hero::after,.form-card::before,.result-main::before,.betalen-wrap::before,.cta-wrap::before{background:linear-gradient(90deg,transparent,rgba(198,203,209,.16) 18%,rgba(255,255,255,.3) 50%,rgba(198,203,209,.16) 82%,transparent)!important}
