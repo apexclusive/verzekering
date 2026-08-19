@@ -24,7 +24,8 @@ header{background:rgba(8,8,8,.9)!important;border-bottom:1px solid rgba(198,203,
 header::after{content:'';position:absolute;left:12%;right:12%;bottom:0;height:1px;background:var(--apex-tricolore);opacity:.7;pointer-events:none}
 .brand{font-family:var(--apex-logo)!important;font-size:1.08rem!important;letter-spacing:.08em!important}
 .brand-apex{letter-spacing:.15em!important;color:var(--apex-silver)!important}
-.brand-excl{letter-spacing:.13em!important;color:rgba(215,218,220,.76)!important}
+.brand-apex{font-weight:500!important}
+.brand-excl{font-weight:300!important;letter-spacing:.13em!important;color:rgba(215,218,220,.76)!important}
 .brand-sep{display:block!important;width:1px!important;height:.66em!important;margin:0 .5rem!important;background:rgba(255,255,255,.62)!important}
 .brand-sep span{display:none!important}
 .back-btn{border-color:rgba(198,203,209,.2)!important;color:rgba(236,236,236,.72)!important}
