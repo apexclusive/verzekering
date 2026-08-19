@@ -12,10 +12,14 @@
   --apex-display:'Cormorant Garamond',serif;
   --apex-logo:'DM Sans',sans-serif;
   --apex-label:'Oswald',sans-serif;
+  --gold:var(--apex-silver);
+  --cream:var(--apex-text);
 }
 html{background:var(--apex-ink)}
 body{background:radial-gradient(circle at 8% 0%,rgba(0,146,70,.035),transparent 25%),radial-gradient(circle at 92% 100%,rgba(206,43,55,.035),transparent 25%),var(--apex-ink)!important;color:var(--apex-text)!important;font-family:'DM Sans',sans-serif!important}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(115deg,rgba(255,255,255,.018),transparent 38%,rgba(255,255,255,.012));opacity:.7}
+.ey-tri,.ey-tri-r{display:none!important;width:0!important;height:0!important}
+.ey{gap:0!important}
 header{background:rgba(8,8,8,.9)!important;border-bottom:1px solid rgba(198,203,209,.16)!important;backdrop-filter:blur(22px)!important;-webkit-backdrop-filter:blur(22px)!important}
 .brand{font-family:var(--apex-logo)!important;font-size:1.08rem!important;letter-spacing:.08em!important}
 .brand-apex{letter-spacing:.15em!important;color:var(--apex-silver)!important}
